@@ -4,6 +4,7 @@ import CitySearch from './components/CitySearch';
 import ImpactMap from './components/ImpactMap';
 import ResultsPanel from './components/ResultsPanel';
 import DeflectionPanel from './components/DeflectionPanel';
+import { fetchNEOs } from './api'; // your API helper
 import './App.css';
 
 function App() {
@@ -11,8 +12,33 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null); // city selection
   const [originalImpactLocation, setOriginalImpactLocation] = useState(null); // raw impact
   const [impactLocation, setImpactLocation] = useState(null); // deflected location
+  const [neos, setNeos] = useState([]);
+  const [asteroidData, setAsteroidData] = useState(null); // initially null
+  const [originalImpactLocation, setOriginalImpactLocation] = useState(null);
+  const [impactLocation, setImpactLocation] = useState(null);
   const [impactResults, setImpactResults] = useState(null);
   const [deltaV, setDeltaV] = useState(0); // Δv slider
+  const [deltaV, setDeltaV] = useState(0);
+
+  useEffect(() => {
+    fetchNEOs()
+      .then((data) => {
+        setNeos(data);
+        if (data.length > 0) {
+          const firstNeo = data[0];
+          setAsteroidData({
+            id: firstNeo.id.toString(),
+            name: firstNeo.name,
+            size: firstNeo.estimated_diameter_km.estimated_diameter_max,
+            velocity: parseFloat(firstNeo.relative_velocity_kps),
+            miss_distance: parseFloat(firstNeo.miss_distance_km),
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch NEOs:', err);
+      });
+  }, []);
 
   // Calculate impact using asteroid properties, optionally with city data
   const calculateImpact = (asteroid, city = null) => {
@@ -67,6 +93,7 @@ function App() {
         <h1>Asteroid Impact Simulator (MVP)</h1>
       </header>
       <main>
+        <AsteroidForm neos={neos} asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
         <AsteroidForm asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
         <CitySearch selectedCity={selectedCity} setSelectedCity={setSelectedCity} />
         <DeflectionPanel deltaV={deltaV} setDeltaV={setDeltaV} />
