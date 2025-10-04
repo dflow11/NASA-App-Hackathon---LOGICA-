@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 class NEO:
     def __init__(self):
-        self.api_key = os.environ.get("NASA_API_KEY", "DEMO_KEY")
+        self.api_key = os.getenv("NASA_API_KEY")
         self.api_url = "https://api.nasa.gov/neo/rest/v1/feed"
 
     def get_neos(self, start_date=None, end_date=None):

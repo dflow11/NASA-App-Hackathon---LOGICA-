@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from models.impact import NEO
 from dotenv import load_dotenv
+from flask_cors import CORS
 import os
 
 # Load environment variables from .env file in the parent directory
@@ -9,7 +10,16 @@ if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path=dotenv_path)
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 neo_model = NEO()
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    response.headers.add("Access-Control-Allow-Credentials", "true")
+    return response
 
 @app.route('/')
 def index():

@@ -6,23 +6,36 @@ import DeflectionPanel from './components/DeflectionPanel';
 import './App.css';
 
 function App() {
-  const [asteroidData, setAsteroidData] = useState({ size: 100, velocity: 20 });
-  const [originalImpactLocation, setOriginalImpactLocation] = useState(null); // raw click
-  const [impactLocation, setImpactLocation] = useState(null); // deflected location
+  const [asteroidData, setAsteroidData] = useState(null); // initially null
+  const [originalImpactLocation, setOriginalImpactLocation] = useState(null);
+  const [impactLocation, setImpactLocation] = useState(null);
   const [impactResults, setImpactResults] = useState(null);
-  const [deltaV, setDeltaV] = useState(0); // Δv slider
+  const [deltaV, setDeltaV] = useState(0);
 
-  // Placeholder formulas
-  const calculateImpact = (data) => ({
-    crater_km: data.size * 0.1,
-    blast_radius_km: data.size * 0.5,
-    energy_megatons: data.size * data.velocity * 0.01,
-  });
+  // Calculate impact using selected asteroid's real properties
+  const calculateImpact = (data) => {
+    if (!data) return null;
+  
+    const sizeKm = data.size; // already in km
+    const velocityKps = data.velocity;
+  
+    // crude scaling for MVP visualization
+    const craterKm = sizeKm * 10;         // 1 km asteroid → 10 km crater
+    const blastKm = sizeKm * 50;          // 1 km asteroid → 50 km blast radius
+    const energyMegatons = sizeKm * velocityKps * 0.01;
+  
+    return {
+      crater_km: craterKm,
+      blast_radius_km: blastKm,
+      energy_megatons: energyMegatons,
+    };
+  };
+  
 
-  // Recalculate deflected impact location whenever deltaV or originalImpactLocation changes
+  // Update deflected impact location when deltaV changes
   useEffect(() => {
     if (originalImpactLocation) {
-      const deflectedLng = originalImpactLocation[1] + deltaV * 0.5; // simple deflection simulation
+      const deflectedLng = originalImpactLocation[1] + deltaV * 0.5; // simple deflection
       setImpactLocation([originalImpactLocation[0], deflectedLng]);
     }
   }, [deltaV, originalImpactLocation]);
@@ -39,7 +52,7 @@ function App() {
         <h1>Asteroid Impact Simulator (MVP)</h1>
       </header>
       <main>
-        <AsteroidForm asteroidData={asteroidData} setAsteroidData={setAsteroidData} />
+        <AsteroidForm asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
         <DeflectionPanel deltaV={deltaV} setDeltaV={setDeltaV} />
         <ImpactMap
           impactLocation={impactLocation}
