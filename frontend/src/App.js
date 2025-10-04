@@ -12,10 +12,12 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null); // city selection
   const [originalImpactLocation, setOriginalImpactLocation] = useState(null); // raw impact
   const [neos, setNeos] = useState([]);
-  const [impactLocation, setImpactLocation] = useState(null);
+  const [impactLocation, setImpactLocation] = useState(null); // deflected location
   const [impactResults, setImpactResults] = useState(null);
-  const [deltaV, setDeltaV] = useState(0); // Δv slider
+  const [deltaLng, setDeltaLng] = useState(0); // longitude deflection
+  const [deltaLat, setDeltaLat] = useState(0); // latitude deflection
 
+  // Fetch NEOs on load
   useEffect(() => {
     fetchNEOs()
       .then((data) => {
@@ -31,57 +33,60 @@ function App() {
           });
         }
       })
-      .catch((err) => {
-        console.error('Failed to fetch NEOs:', err);
-      });
+      .catch((err) => console.error('Failed to fetch NEOs:', err));
   }, []);
 
   // Calculate impact using asteroid properties, optionally with city data
   const calculateImpact = (asteroid, city = null) => {
     if (!asteroid) return null;
 
-    const sizeKm = asteroid.size; // km
+    const sizeKm = asteroid.size;
     const velocityKps = asteroid.velocity;
 
-    // Basic MVP scaling
+    // MVP scaling
     const craterKm = sizeKm * 10;
     const blastKm = sizeKm * 50;
     const energyMegatons = sizeKm * velocityKps * 0.01;
 
-    // Rough casualty estimate only if a real city is selected
+    // Rough casualties if a real city is selected
     let casualties = null;
     if (city && city.population) {
-      const pop = parseInt(city.population, 10);// || 0;
-      const affectedFraction = Math.min(1, blastKm / 50); 
+      const pop = parseInt(city.population, 10);
+      const affectedFraction = Math.min(1, blastKm / 50);
       casualties = Math.round(pop * affectedFraction);
     }
 
     return { crater_km: craterKm, blast_radius_km: blastKm, energy_megatons: energyMegatons, casualties };
   };
 
-  // When user selects a city, set original location and impact results
+  // When user selects a city
   useEffect(() => {
     if (selectedCity && asteroidData) {
-      console.log(selectedCity);
       const latlng = [parseFloat(selectedCity.lat), parseFloat(selectedCity.lon)];
       setOriginalImpactLocation(latlng);
       setImpactResults(calculateImpact(asteroidData, selectedCity));
+      setDeltaLng(0);
+      setDeltaLat(0);
     }
   }, [selectedCity, asteroidData]);
 
-  // Update deflected impact location when deltaV changes
+  // Update deflected impact location based on deltaLat/deltaLng
   useEffect(() => {
     if (originalImpactLocation) {
-      const deflectedLng = originalImpactLocation[1] + deltaV * 0.5; // simple longitude shift
-      setImpactLocation([originalImpactLocation[0], deflectedLng]);
+      setImpactLocation([
+        originalImpactLocation[0] + deltaLat,
+        originalImpactLocation[1] + deltaLng,
+      ]);
     }
-  }, [deltaV, originalImpactLocation]);
+  }, [deltaLat, deltaLng, originalImpactLocation]);
 
-  // Map click handler (for non-city locations)
+  // Map click handler for non-city locations
   const handleMapClick = (latlng) => {
-    setSelectedCity(null); // clear city selection
+    setSelectedCity(null);
     setOriginalImpactLocation(latlng);
     setImpactResults(calculateImpact(asteroidData, null)); // no casualties
+    setDeltaLng(0);
+    setDeltaLat(0);
   };
 
   return (
@@ -91,9 +96,11 @@ function App() {
       </header>
       <main>
         <AsteroidForm neos={neos} asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
-        {/* <AsteroidForm asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} /> */}
         <CitySearch selectedCity={selectedCity} setSelectedCity={setSelectedCity} />
-        <DeflectionPanel deltaV={deltaV} setDeltaV={setDeltaV} />
+        <DeflectionPanel
+          deltaLng={deltaLng} setDeltaLng={setDeltaLng}
+          deltaLat={deltaLat} setDeltaLat={setDeltaLat}
+        />
         <ImpactMap
           impactLocation={impactLocation}
           impactResults={impactResults}
