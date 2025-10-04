@@ -1,19 +1,8 @@
-import os
-from datetime import datetime, timedelta
-from flask import Flask, jsonify, request
-import requests
-from dotenv import load_dotenv
-
-# Load environment variables from a .env file
-load_dotenv()
-
+from flask import Flask, jsonify
+from models.deflection import Deflection
 
 app = Flask(__name__)
-
-# set 'NASA_API_KEY' in the environment, or temporarily replace
-# 'API_KEY_HERE' with the actual key for testing.
-NASA_API_KEY = os.getenv('NASA_API_KEY')
-NASA_NEO_API_URL = "https://aspi.nasa.gov/neo/rest/v1/feed"
+deflection_model = Deflection()
 
 @app.route('/')
 def index():
@@ -23,29 +12,13 @@ def index():
 @app.route('/neo')
 def get_neo_data():
     """
-    Fetches Near Earth Object data from NASA's API for the past 7 days.
+    Fetches Near Earth Object data from NASA's API.
     """
-# A simple check to ensure the API key is set
-    if not NASA_API_KEY:
-        return jsonify({"error": "NASA_API_KEY is not set. Please add it to your .env file."}), 500
-    # Calculate start and end dates for the API query (e.g., the last 7 days)
-    end_date = datetime.today()
-    start_date = end_date - timedelta(days=7)
-
-    params = {
-        'start_date': start_date.strftime('%Y-%m-%d'),
-        'end_date': end_date.strftime('%Y-%m-%d'),
-        'api_key': NASA_API_KEY
-    }
-
-    try:
-        response = requests.get(NASA_NEO_API_URL, params=params)
-        # Raise an exception for bad status codes (4xx or 5xx)
-        response.raise_for_status()
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        # Handle connection errors, timeouts, etc.
-        return jsonify({"error": f"Failed to retrieve data from NASA API: {e}"}), 500
+    neos = deflection_model.get_neos()
+    if neos is not None:
+        return jsonify(neos)
+    else:
+        return jsonify({"error": "Failed to retrieve data from NASA API."}), 500
 
 if __name__ == '__main__':
     # Runs the app in debug mode for development.
