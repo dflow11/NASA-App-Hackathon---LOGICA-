@@ -11,14 +11,10 @@ function App() {
   const [asteroidData, setAsteroidData] = useState(null); // selected asteroid
   const [selectedCity, setSelectedCity] = useState(null); // city selection
   const [originalImpactLocation, setOriginalImpactLocation] = useState(null); // raw impact
-  const [impactLocation, setImpactLocation] = useState(null); // deflected location
   const [neos, setNeos] = useState([]);
-  const [asteroidData, setAsteroidData] = useState(null); // initially null
-  const [originalImpactLocation, setOriginalImpactLocation] = useState(null);
   const [impactLocation, setImpactLocation] = useState(null);
   const [impactResults, setImpactResults] = useState(null);
   const [deltaV, setDeltaV] = useState(0); // Δv slider
-  const [deltaV, setDeltaV] = useState(0);
 
   useEffect(() => {
     fetchNEOs()
@@ -54,8 +50,8 @@ function App() {
 
     // Rough casualty estimate only if a real city is selected
     let casualties = null;
-    if (city && city.pop) {
-      const pop = parseInt(city.pop, 10) || 0;
+    if (city && city.population) {
+      const pop = parseInt(city.population, 10);// || 0;
       const affectedFraction = Math.min(1, blastKm / 50); 
       casualties = Math.round(pop * affectedFraction);
     }
@@ -66,6 +62,7 @@ function App() {
   // When user selects a city, set original location and impact results
   useEffect(() => {
     if (selectedCity && asteroidData) {
+      console.log(selectedCity);
       const latlng = [parseFloat(selectedCity.lat), parseFloat(selectedCity.lon)];
       setOriginalImpactLocation(latlng);
       setImpactResults(calculateImpact(asteroidData, selectedCity));
@@ -94,7 +91,7 @@ function App() {
       </header>
       <main>
         <AsteroidForm neos={neos} asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
-        <AsteroidForm asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
+        {/* <AsteroidForm asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} /> */}
         <CitySearch selectedCity={selectedCity} setSelectedCity={setSelectedCity} />
         <DeflectionPanel deltaV={deltaV} setDeltaV={setDeltaV} />
         <ImpactMap
