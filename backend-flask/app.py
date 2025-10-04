@@ -13,7 +13,7 @@ app = Flask(__name__)
 # set 'NASA_API_KEY' in the environment, or temporarily replace
 # 'API_KEY_HERE' with the actual key for testing.
 NASA_API_KEY = os.getenv('NASA_API_KEY')
-NASA_NEO_API_URL = "https://api.nasa.gov/neo/rest/v1/feed"
+NASA_NEO_API_URL = "https://aspi.nasa.gov/neo/rest/v1/feed"
 
 @app.route('/')
 def index():
