@@ -9,6 +9,7 @@ const ResultsPanel = ({ impactResults }) => {
       <p>Energy: {impactResults.energy_megatons.toFixed(2)} Mt TNT</p>
       <p>Crater Size: {impactResults.crater_km.toFixed(2)} km</p>
       <p>Blast Radius: {impactResults.blast_radius_km.toFixed(2)} km</p>
+      {impactResults.casualties !== null ? <p>Casualties: {impactResults.casualties}</p> : null}
     </div>
   );
 };

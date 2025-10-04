@@ -9,9 +9,16 @@ const ClickableMap = ({ onMapClick }) => {
 
 const ZoomAwareMarker = ({ center, km, color }) => {
   const map = useMap();
-  const radius = Math.max(5, Math.min(50, km * map.getZoom() * 0.5));
+
+  // Inverse scale: smaller when zoomed out, bigger when zoomed in
+  const baseZoom = 2; // zoom level where marker is "normal size"
+  const zoomFactor = Math.pow(2, map.getZoom() - baseZoom); // doubles each zoom step
+  const radius = Math.max(3, km / zoomFactor); // km divided by zoom factor
+
   return <CircleMarker center={center} radius={radius} pathOptions={{ color, fillOpacity: 0.5 }} />;
 };
+
+
 
 const ImpactMap = ({ impactLocation, impactResults, onMapClick }) => {
   const center = [0, 0];
