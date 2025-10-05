@@ -193,7 +193,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>Asteroid Impact Simulator (MVP)</h1>
+        <h1>Mad Meteor Messenger</h1>
       </header>
       <main>
         <AsteroidForm neos={neos} asteroidData={asteroidData || {}} setAsteroidData={setAsteroidData} />
