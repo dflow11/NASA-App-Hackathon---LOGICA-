@@ -61,7 +61,7 @@ const CitySearch = ({ setSelectedCity }) => {
             <li
               key={city.id}
               onClick={() => handleSelect(city)}
-              style={{ cursor: 'pointer', padding: '0.25rem 0' }}
+              style={{ cursor: 'pointer', padding: '0.25rem 0', color:'black' }}
             >
               {city.name}, {city.admin1} ({city.country})
             </li>
