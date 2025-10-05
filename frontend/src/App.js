@@ -16,6 +16,7 @@ function App() {
   const [impactResults, setImpactResults] = useState(null);
   const [deltaLng, setDeltaLng] = useState(0); // longitude deflection
   const [deltaLat, setDeltaLat] = useState(0); // latitude deflection
+  const [mapZoom, setMapZoom] = useState(4); // Add state for map zoom
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState('Fetching Near-Earth Objects from NASA...');
@@ -104,8 +105,17 @@ function App() {
       setImpactResults(calculateImpact(asteroidData, selectedCity));
       setDeltaLng(0);
       setDeltaLat(0);
+      setMapZoom(7); // Zoom in when a new city is selected
     }
   }, [selectedCity, asteroidData, calculateImpact]);
+
+  // When user selects a new asteroid, recalculate impact for the current location
+  useEffect(() => {
+    // Only recalculate if there's already an impact location set
+    if (originalImpactLocation && asteroidData) {
+      setImpactResults(calculateImpact(asteroidData, selectedCity));
+    }
+  }, [asteroidData, originalImpactLocation, selectedCity, calculateImpact]);
 
   // Update deflected impact location based on deltaLat/deltaLng
   useEffect(() => {
@@ -124,6 +134,7 @@ function App() {
     setImpactResults(calculateImpact(asteroidData, null)); // no casualties
     setDeltaLng(0);
     setDeltaLat(0);
+    setMapZoom(null); // Don't force zoom on map click, just pan
   };
 
   if (loading) {
@@ -149,6 +160,7 @@ function App() {
         <ImpactMapWrapper
           impactLocation={impactLocation}
           impactResults={impactResults}
+          mapZoom={mapZoom}
           onMapClick={handleMapClick}
         />
         <ResultsPanel impactResults={impactResults} />
