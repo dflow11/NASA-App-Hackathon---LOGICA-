@@ -178,74 +178,71 @@ def _overpass_has_water(lat, lon, radius=200, timeout=10):
 		return False
 
 
-def estimate_tsunami_from_impact(energy_megatons, water_depth_m):
-	"""Estimate tsunami characteristics from impact energy (Mt TNT) and local water depth (m).
+def estimate_tsunami_from_impact(energy_megatons, water_depth_m, coupling_efficiency=0.05):
+    """
+    Simpler demo tsunami estimator.
 
-	Returns a dict with approximate initial_wave_height_m (near source),
-	shore_wave_height_m (rough estimate after shoaling), wave_energy_megatons (approx),
-	and a simple damage_level string.
+    - energy_megatons: impact energy in megatons TNT
+    - water_depth_m: local water depth in meters
+    - coupling_efficiency: fraction of kinetic energy that couples into water (0.03-0.1 reasonable for demo)
+    Returns dict similar to your original structure.
+    """
 
-	These formulas are intentionally simple approximations for demo purposes and
-	are NOT a substitute for scientific tsunami models.
-	"""
-	# Basic conversions
-	energy_joules = float(energy_megatons) * JOULES_PER_MEGATON
+    energy_joules = float(energy_megatons) * JOULES_PER_MEGATON
+    # energy that goes into the water
+    coupled_energy = energy_joules * float(coupling_efficiency)
 
-	# Fraction of kinetic energy that couples into the water to generate waves.
-	# This is highly uncertain; choose a small efficiency.
-	coupling_efficiency = 0.01
-	coupled_energy = energy_joules * coupling_efficiency
+    # calibration constant (empirical for demo use)
+    K = 0.002
 
-	# Empirical scaling: initial wave amplitude near source scales with cube-root of energy
-	# and inversely with depth (deeper water spreads energy more).
-	# constants chosen to produce reasonable demo numbers
-	C = 0.12
-	depth_factor = 1.0 / math.sqrt(max(1.0, water_depth_m))
-	initial_wave_m = C * (float(energy_megatons) ** (1.0 / 3.0)) * depth_factor
+    # avoid zero depth
+    d = max(1.0, float(water_depth_m))
 
-	# Shoaling: waves grow as they approach shallower water. Simple model: H_shore = H0 * (D_source / D_nearshore)^0.25
-	# We'll assume nearshore depth of 50 m for generic coastline.
-	nearshore_depth = 50.0
-	shoaling_factor = (max(1.0, water_depth_m) / nearshore_depth) ** 0.25
-	shore_wave_m = initial_wave_m * max(0.5, shoaling_factor)
+    # initial wave amplitude near source (m) using 1/4 scaling
+    H0 = K * (coupled_energy ** 0.25) / (d ** 0.25)
 
-	# Estimate wave energy retained in the tsunami (very rough): use potential energy ~ 0.5 * rho * g * H^2 * A
-	# Choose a nominal affected area A based on energy and depth: A ~ coupled_energy / (rho*g*H)
-	H = max(0.001, initial_wave_m)
-	try:
-		A = coupled_energy / (RHO_WATER * G * H)
-	except Exception:
-		A = 0.0
-	wave_energy_joules = 0.5 * RHO_WATER * G * (H ** 2) * max(0.0, A)
-	wave_energy_megatons = wave_energy_joules / JOULES_PER_MEGATON if wave_energy_joules > 0 else 0.0
+    # simple shoaling toward shore (assume nearshore depth ~ 50 m)
+    nearshore_depth = 50.0
+    shoaling_factor = (d / nearshore_depth) ** 0.25
+    H_shore = H0 * max(0.5, shoaling_factor)
 
-	# Simple damage classification
-	if shore_wave_m >= 10:
-		damage = 'catastrophic'
-	elif shore_wave_m >= 3:
-		damage = 'severe'
-	elif shore_wave_m >= 1:
-		damage = 'moderate'
-	elif shore_wave_m >= 0.2:
-		damage = 'minor'
-	else:
-		damage = 'negligible'
+    # # very rough inundation distance
+    inundation_m = H_shore * 100.0
 
-	# Estimated inundation distance (very rough): meters of inundation ~ shore_wave_m * 100
-	inundation_m = shore_wave_m * 100.0
+    # wave energy retained (very approximate)
+    H = max(0.001, H0)
+    try:
+        A = coupled_energy / (RHO_WATER * G * H)
+    except Exception:
+        A = 0.0
+    wave_energy_joules = 0.5 * RHO_WATER * G * (H ** 2) * max(0.0, A)
+    wave_energy_megatons = wave_energy_joules / JOULES_PER_MEGATON if wave_energy_joules > 0 else 0.0
 
-	return {
-		'initial_wave_height_m': initial_wave_m,
-		'shore_wave_height_m': shore_wave_m,
-		'wave_energy_megatons': wave_energy_megatons,
-		'inundation_m': inundation_m,
-		'damage_level': damage,
-		'coupled_energy_joules': coupled_energy,
-		'assumptions': {
-			'coupling_efficiency': coupling_efficiency,
-			'nearshore_depth_m': nearshore_depth,
-		}
-	}
+    # classification
+    if H_shore >= 10:
+        damage = 'catastrophic'
+    elif H_shore >= 3:
+        damage = 'severe'
+    elif H_shore >= 1:
+        damage = 'moderate'
+    elif H_shore >= 0.2:
+        damage = 'minor'
+    else:
+        damage = 'negligible'
+
+    return {
+        'initial_wave_height_m': H0,
+        'shore_wave_height_m': H_shore,
+        'wave_energy_megatons': wave_energy_megatons,
+        'inundation_m': inundation_m,
+        'damage_level': damage,
+        'coupled_energy_joules': coupled_energy,
+        'assumptions': {
+            'coupling_efficiency': coupling_efficiency,
+            'nearshore_depth_m': nearshore_depth,
+            'K_calibration': K
+        }
+    }
 
 
 if __name__ == '__main__':
