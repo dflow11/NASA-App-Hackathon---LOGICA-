@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from models.impact import NEO
 from models.deflection import estimate_deflection
+from models.tsunami import is_water_at_location, estimate_tsunami_from_impact
 from flask import request
 from dotenv import load_dotenv
 from flask_cors import CORS
@@ -93,6 +94,47 @@ def deflect_orbit():
         "error": "High-fidelity orbit propagation not implemented yet. This endpoint is a stub.",
         "notes": "To implement: add orbital propagator (poliastro/orekit), accept orbital elements, compute delta-v and impact point shift."
     }), 501
+
+
+@app.route('/tsunami', methods=['POST'])
+def tsunami():
+    """Estimate whether an impact at lat/lon would produce a tsunami.
+
+    Expects JSON body: { "lat": float, "lon": float, "energy_megatons": float }
+    Returns JSON with water detection, elevation (if available), and tsunami estimates when applicable.
+    """
+    data = request.get_json() or {}
+    try:
+        lat = float(data.get('lat'))
+        lon = float(data.get('lon'))
+        energy_megatons = float(data.get('energy_megatons', 0.0))
+    except Exception as e:
+        return jsonify({"error": "Invalid input: must provide lat, lon, energy_megatons"}), 400
+
+    # Use env key if available
+    google_key = os.getenv('GOOGLE_ELEVATION_API_KEY')
+    is_water, elevation = is_water_at_location(lat, lon, api_key=google_key)
+
+    result = {
+        'lat': lat,
+        'lon': lon,
+        'elevation_m': elevation,
+        'is_water': is_water,
+    }
+
+    # If we know it's water, compute tsunami estimates; if unknown, indicate unknown
+    if is_water is True:
+        # use absolute value of depth for water depth; if elevation negative it's depth below sea level
+        water_depth = max(1.0, -elevation) if elevation is not None else 1000.0
+        tsunami_est = estimate_tsunami_from_impact(energy_megatons=energy_megatons, water_depth_m=water_depth)
+        result['tsunami'] = tsunami_est
+    elif is_water is False:
+        result['tsunami'] = None
+    else:
+        result['tsunami'] = None
+        result['note'] = 'Water/land unknown (no elevation data available)'
+
+    return jsonify(result)
 
 if __name__ == '__main__':
     # Runs the app in debug mode for development.

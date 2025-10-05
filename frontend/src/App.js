@@ -116,7 +116,31 @@ function App() {
   useEffect(() => {
     // Only recalculate if there's already an impact location set
     if (originalImpactLocation && asteroidData) {
-      setImpactResults(calculateImpact(asteroidData, selectedCity));
+      const baseResults = calculateImpact(asteroidData, selectedCity);
+      setImpactResults(baseResults);
+
+      // Call backend /tsunami endpoint to check water and estimate tsunami
+      (async () => {
+        try {
+          const resp = await fetch('http://localhost:5000/tsunami', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lat: originalImpactLocation[0],
+              lon: originalImpactLocation[1],
+              energy_megatons: baseResults.energy_megatons
+            })
+          });
+          if (resp.ok) {
+            const js = await resp.json();
+            // Attach tsunami info to impactResults
+            setImpactResults((prev) => ({ ...prev, tsunami: js }));
+          }
+        } catch (e) {
+          // ignore errors for now
+          console.warn('Failed to fetch tsunami data', e);
+        }
+      })();
     }
   }, [asteroidData, originalImpactLocation, selectedCity, calculateImpact]);
 
@@ -134,7 +158,25 @@ function App() {
   const handleMapClick = (latlng) => {
     setSelectedCity(null);
     setOriginalImpactLocation(latlng);
-    setImpactResults(calculateImpact(asteroidData, null)); // no casualties
+    const baseResults = calculateImpact(asteroidData, null); // no casualties
+    setImpactResults(baseResults);
+
+    // Immediately request tsunami estimate for clicked location
+    (async () => {
+      try {
+        const resp = await fetch('http://localhost:5000/tsunami', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat: latlng[0], lon: latlng[1], energy_megatons: baseResults.energy_megatons })
+        });
+        if (resp.ok) {
+          const js = await resp.json();
+          setImpactResults((prev) => ({ ...prev, tsunami: js }));
+        }
+      } catch (e) {
+        console.warn('Failed to fetch tsunami on click', e);
+      }
+    })();
     setDeltaLng(0);
     setDeltaLat(0);
     setMapZoom(null); // Don't force zoom on map click, just pan
