@@ -30,7 +30,13 @@ const CitySearch = ({ setSelectedCity }) => {
   };
 
   return (
-    <div style={{ marginBottom: '1rem', position: 'relative' }}>
+    <div
+      style={{
+        maxWidth: '600px',
+        margin: '0 auto 1rem auto',
+        position: 'relative',
+      }}
+    >
       <input
         type="text"
         value={query}

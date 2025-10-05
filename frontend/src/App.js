@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AsteroidForm from './components/AsteroidForm';
 import CitySearch from './components/CitySearch';
 import ImpactMap from './components/ImpactMap';
 import ResultsPanel from './components/ResultsPanel';
 import DeflectionPanel from './components/DeflectionPanel';
 import { fetchNEOs } from './api'; // your API helper
-import './App.css';
+import './css/App.css';
 
 function App() {
   const [asteroidData, setAsteroidData] = useState(null); // selected asteroid
@@ -24,12 +24,12 @@ function App() {
         setNeos(data);
         if (data.length > 0) {
           const firstNeo = data[0];
+          // Safely access nested properties
           setAsteroidData({
             id: firstNeo.id.toString(),
             name: firstNeo.name,
-            size: firstNeo.estimated_diameter_km.estimated_diameter_max,
-            velocity: parseFloat(firstNeo.relative_velocity_kps),
-            miss_distance: parseFloat(firstNeo.miss_distance_km),
+            size: firstNeo.estimated_diameter_km?.estimated_diameter_max || 0,
+            velocity: parseFloat(firstNeo.close_approach_data?.[0]?.relative_velocity?.kilometers_per_second) || 0,
           });
         }
       })
@@ -37,7 +37,7 @@ function App() {
   }, []);
 
   // Calculate impact using asteroid properties, optionally with city data
-  const calculateImpact = (asteroid, city = null) => {
+  const calculateImpact = useCallback((asteroid, city = null) => {
     if (!asteroid) return null;
 
     const sizeKm = asteroid.size;
@@ -57,7 +57,7 @@ function App() {
     }
 
     return { crater_km: craterKm, blast_radius_km: blastKm, energy_megatons: energyMegatons, casualties };
-  };
+  }, []);
 
   // When user selects a city
   useEffect(() => {
@@ -68,7 +68,7 @@ function App() {
       setDeltaLng(0);
       setDeltaLat(0);
     }
-  }, [selectedCity, asteroidData]);
+  }, [selectedCity, asteroidData, calculateImpact]);
 
   // Update deflected impact location based on deltaLat/deltaLng
   useEffect(() => {
