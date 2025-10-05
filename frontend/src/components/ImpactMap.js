@@ -49,6 +49,14 @@ function ImpactMap({ impactLocation, impactResults, onMapClick, mapZoom }) {
             pathOptions={{ fillColor: 'black', color: 'black', fillOpacity: 0.6 }}
             radius={impactResults.crater_km * 1000} // Convert km to meters
           />
+          {/* Tsunami inundation overlay (blue) when provided */}
+          {impactResults.tsunami && impactResults.tsunami.tsunami && (
+            <Circle
+              center={impactLocation}
+              pathOptions={{ fillColor: 'blue', color: 'blue', fillOpacity: 0.25 }}
+              radius={impactResults.tsunami.tsunami.inundation_m}
+            />
+          )}
         </>
       )}
       <MapUpdater center={impactLocation} zoom={mapZoom} />

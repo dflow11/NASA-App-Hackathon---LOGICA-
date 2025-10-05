@@ -28,13 +28,19 @@ class NEO:
             neos = []
             for date in data["near_earth_objects"]:
                 for neo in data["near_earth_objects"][date]:
+                    # Pull primary close approach data (first entry)
+                    cad = neo.get("close_approach_data", [])
+                    cad0 = cad[0] if cad else {}
                     neos.append({
                         "name": neo["name"],
                         "id": neo["id"],
                         "estimated_diameter_km": neo["estimated_diameter"]["kilometers"],
-                        "relative_velocity_kps": neo["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"],
-                        "miss_distance_km": neo["close_approach_data"][0]["miss_distance"]["kilometers"],
-                        "absolute_magnitude": neo["absolute_magnitude_h"]
+                        "relative_velocity_kps": cad0.get("relative_velocity", {}).get("kilometers_per_second"),
+                        "miss_distance_km": cad0.get("miss_distance", {}).get("kilometers"),
+                        "absolute_magnitude": neo["absolute_magnitude_h"],
+                        # include close approach date fields so frontend can compute lead time
+                        "close_approach_date": cad0.get("close_approach_date"),
+                        "close_approach_date_full": cad0.get("close_approach_date_full")
                     })
             return neos
 
