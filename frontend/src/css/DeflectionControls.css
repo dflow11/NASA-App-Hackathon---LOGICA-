@@ -1,16 +1,17 @@
 .deflect-card {
-  background: linear-gradient(180deg, #f7fbff, #ffffff);
+  background: linear-gradient(180deg, #3b3d3ec1, #143e9a94);
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 18px rgba(13, 47, 126, 0.485);
   padding: 1rem;
   max-width: 420px;
   margin-bottom: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #ffffff;
 }
 .deflect-row { display:flex; align-items:center; margin-bottom:0.6rem; }
-.deflect-label { width: 160px; color:#234; font-weight:600; font-size:0.95rem }
-.deflect-input { flex:1; padding:6px 8px; border-radius:6px; border:1px solid #e1e8f0 }
-.deflect-small { font-size:0.85rem; color:#4a5568; margin-left: 6px }
-.deflect-btn { margin-top: .5rem; background:#0b66ff; color:white; padding:8px 12px; border-radius:6px; border:none; cursor:pointer }
+.deflect-label { width: 160px; color:rgb(255, 255, 255); font-weight:600; font-size:0.95rem }
+.deflect-input { flex:1; padding:6px 8px; border-radius:6px; border:1px solid #ffffff }
+.deflect-small { font-size:0.85rem; color:#ffffff; margin-left: 6px }
+.deflect-btn { margin-top: .5rem; background:#0949b6; color:white; padding:8px 12px; border-radius:6px; border:none; cursor:pointer }
 .deflect-btn:disabled { opacity:0.6; cursor:not-allowed }
 .deflect-result { margin-top:0.8rem; background:#f6f9ff; padding:8px; border-radius:6px }

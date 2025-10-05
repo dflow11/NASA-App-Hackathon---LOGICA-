@@ -3,14 +3,19 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: url("");
+  background-color: #e5eaf2;
+  background-image: url(https://media.discordapp.net/attachments/1424199490339868762/1424240921074995351/photo-1759434225861-e834192ccdaf.jpg?ex=68e33b38&is=68e1e9b8&hm=753d5a5aaae2c0f3b99aee417186a102bae4c8ac0e0ae61d5140747ff15814b4&=&format=webp&width=1240&height=826);
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: white;
 
 }
 
 .App header {
-  background-color: #282c34;
+  background-image: url(https://media.discordapp.net/attachments/1424199490339868762/1424267285509705768/photo-1706562017568-7964cce30aa0.jpg?ex=68e353c6&is=68e20246&hm=f7aceec74af6a3a26d3b748c0cf2676380eaa367246b569e6a2e26dd3057447c&=&format=webp&width=1423&height=800);
   padding: 20px;
   color: white;
+  font-family:'Merriweather';
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -26,6 +31,7 @@
     "search map"
     "deflect map"
     "results map";
+    color: #ffffff;
 }
 
 .App-status {
@@ -34,5 +40,6 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  color: #282c34;
+  color: #ffffff;
+  background-color: black;
 }

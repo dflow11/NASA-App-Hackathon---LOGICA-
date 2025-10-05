@@ -98,7 +98,7 @@ function DeflectionControls({ asteroidData }) {
   return (
     <div className="deflect-card">
       <h3 style={{marginTop:0}}>Kinetic Impactor Estimator</h3>
-      <div style={{marginBottom:'.4rem', color:'#334'}}>Default presets: Falcon 9 & DART-like timelines</div>
+      <div style={{marginBottom:'.4rem', color:'white'}}>Default presets: Falcon 9 & DART-like timelines</div>
       <div style={{marginBottom:8}}>
         <div className="deflect-row">
           <div className="deflect-label">Lead time (days)</div>
