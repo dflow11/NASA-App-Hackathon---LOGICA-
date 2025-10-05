@@ -4,6 +4,7 @@ import CitySearch from './components/CitySearch';
 import ImpactMapWrapper from './components/ImpactMap';
 import ResultsPanel from './components/ResultsPanel';
 import DeflectionPanel from './components/DeflectionPanel';
+import DeflectionControls from './components/DeflectionControls';
 import { fetchNEOs } from './api'; // your API helper
 import './css/App.css';
 
@@ -36,7 +37,9 @@ function App() {
             id: firstNeo.id.toString(),
             name: firstNeo.name,
             size: firstNeo.estimated_diameter_km?.estimated_diameter_max || 0,
-            velocity: parseFloat(firstNeo.close_approach_data?.[0]?.relative_velocity?.kilometers_per_second) || 0,
+            velocity: parseFloat(firstNeo.relative_velocity_kps) || 0,
+            miss_distance: parseFloat(firstNeo.miss_distance_km) || 0,
+            close_approach_date: firstNeo.close_approach_date || firstNeo.close_approach_date_full || null,
           });
         } else {
           setStatusMessage('No NEO data available at the moment.');
@@ -157,6 +160,7 @@ function App() {
           deltaLng={deltaLng} setDeltaLng={setDeltaLng}
           deltaLat={deltaLat} setDeltaLat={setDeltaLat}
         />
+        <DeflectionControls asteroidData={asteroidData} />
         <ImpactMapWrapper
           impactLocation={impactLocation}
           impactResults={impactResults}

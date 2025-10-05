@@ -3,7 +3,7 @@ import React from 'react';
 const AsteroidForm = ({ neos, asteroidData, setAsteroidData }) => {
   const handleSelect = (e) => {
     const selectedId = e.target.value;
-    const selectedNeo = neos.find((n) => n.id === selectedId);
+    const selectedNeo = neos.find((n) => n.id === selectedId || String(n.id) === String(selectedId));
 
     if (selectedNeo) {
       setAsteroidData({
@@ -12,6 +12,7 @@ const AsteroidForm = ({ neos, asteroidData, setAsteroidData }) => {
         size: selectedNeo.estimated_diameter_km.estimated_diameter_max,
         velocity: parseFloat(selectedNeo.relative_velocity_kps),
         miss_distance: parseFloat(selectedNeo.miss_distance_km),
+        close_approach_date: selectedNeo.close_approach_date || selectedNeo.close_approach_date_full || null,
       });
     }
   };
