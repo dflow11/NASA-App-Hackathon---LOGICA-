@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AsteroidForm from './components/AsteroidForm';
 import CitySearch from './components/CitySearch';
-import ImpactMap from './components/ImpactMap';
+import ImpactMapWrapper from './components/ImpactMap';
 import ResultsPanel from './components/ResultsPanel';
 import DeflectionPanel from './components/DeflectionPanel';
 import { fetchNEOs } from './api'; // your API helper
@@ -16,13 +16,19 @@ function App() {
   const [impactResults, setImpactResults] = useState(null);
   const [deltaLng, setDeltaLng] = useState(0); // longitude deflection
   const [deltaLat, setDeltaLat] = useState(0); // latitude deflection
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('Fetching Near-Earth Objects from NASA...');
 
   // Fetch NEOs on load
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetchNEOs()
       .then((data) => {
         setNeos(data);
         if (data.length > 0) {
+          setStatusMessage('Data loaded. Select a city or click on the map to begin.');
           const firstNeo = data[0];
           // Safely access nested properties
           setAsteroidData({
@@ -31,9 +37,16 @@ function App() {
             size: firstNeo.estimated_diameter_km?.estimated_diameter_max || 0,
             velocity: parseFloat(firstNeo.close_approach_data?.[0]?.relative_velocity?.kilometers_per_second) || 0,
           });
+        } else {
+          setStatusMessage('No NEO data available at the moment.');
+          setError('No near-earth objects were returned by the API.');
         }
+        setLoading(false);
       })
-      .catch((err) => console.error('Failed to fetch NEOs:', err));
+      .catch((err) => {
+        setError('Failed to fetch data from the backend. Is the Flask server running?');
+        setLoading(false);
+      });
   }, []);
 
   // Calculate impact using asteroid properties, optionally with city data
@@ -43,20 +56,44 @@ function App() {
     const sizeKm = asteroid.size;
     const velocityKps = asteroid.velocity;
 
-    // MVP scaling
-    const craterKm = sizeKm * 10;
-    const blastKm = sizeKm * 50;
-    const energyMegatons = sizeKm * velocityKps * 0.01;
+    // --- Improved Physics Calculation ---
+    // Constants
+    const DENSITY_ASTEROID_KGM3 = 2700; // Average density of a stony asteroid
+    const JOULES_PER_MEGATON_TNT = 4.184e15;
+
+    // Calculations
+    const sizeM = sizeKm * 1000;
+    const velocityMps = velocityKps * 1000;
+    const massKg = (4/3) * Math.PI * Math.pow(sizeM / 2, 3) * DENSITY_ASTEROID_KGM3;
+    const energyJoules = 0.5 * massKg * Math.pow(velocityMps, 2);
+    const energyMegatons = energyJoules / JOULES_PER_MEGATON_TNT;
+
+    // Scaling laws for effects (simplified from scientific models)
+    // Define multiple rings of destruction
+    const energyCubeRoot = Math.pow(energyMegatons, 1/3);
+    const craterKm = 1.5 * energyCubeRoot;
+    const severeBlastKm = 5 * energyCubeRoot;
+    const moderateBlastKm = 15 * energyCubeRoot;
+    const lightBlastKm = 40 * energyCubeRoot;
+    // --- End of Improved Calculation ---
 
     // Rough casualties if a real city is selected
     let casualties = null;
     if (city && city.population) {
       const pop = parseInt(city.population, 10);
-      const affectedFraction = Math.min(1, blastKm / 50);
+      const affectedFraction = Math.min(1, severeBlastKm / 50); // Base casualties on severe blast zone
       casualties = Math.round(pop * affectedFraction);
     }
 
-    return { crater_km: craterKm, blast_radius_km: blastKm, energy_megatons: energyMegatons, casualties };
+    return {
+      crater_km: craterKm,
+      blast_radius_km: severeBlastKm, // Add this back for compatibility
+      severe_blast_km: severeBlastKm,
+      moderate_blast_km: moderateBlastKm,
+      light_blast_km: lightBlastKm,
+      energy_megatons: energyMegatons,
+      casualties
+    };
   }, []);
 
   // When user selects a city
@@ -89,6 +126,14 @@ function App() {
     setDeltaLat(0);
   };
 
+  if (loading) {
+    return <div className="App-status"><h1>Loading...</h1><p>{statusMessage}</p></div>;
+  }
+
+  if (error) {
+    return <div className="App-status"><h1>Error</h1><p>{error}</p></div>;
+  }
+
   return (
     <div className="App">
       <header>
@@ -101,7 +146,7 @@ function App() {
           deltaLng={deltaLng} setDeltaLng={setDeltaLng}
           deltaLat={deltaLat} setDeltaLat={setDeltaLat}
         />
-        <ImpactMap
+        <ImpactMapWrapper
           impactLocation={impactLocation}
           impactResults={impactResults}
           onMapClick={handleMapClick}
